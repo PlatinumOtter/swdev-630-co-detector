@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine
-from json import dumps
 
 db_connect = create_engine('sqlite:///comonitor.db')
 app = Flask(__name__)
@@ -40,13 +39,25 @@ class Alerts(Resource):
 class User_Alerts(Resource):
     def get(self, username):
         conn = db_connect.connect()
-        query = conn.execute("select EnvParam, RegValue, Threshold, Timestamp from alerts where User = \'" + username + "\';")
+        query = conn.execute(
+            "select EnvParam, RegValue, Threshold, Timestamp from alerts where User = \'" + username + "\';")
         result = {'data': [dict(zip(tuple(query.keys()), i)) for i in query.cursor]}
         return jsonify(result)
 
 
+class Update_Alerts(Resource):
+    def post(self, param):
+        conn = db_connect.connect()
+        print(request.json)
+        Reading = request.json['RegValue']
+        query = conn.execute(
+            "update alerts set RegValue='{0}', Timestamp=datetime() where EnvParam='{1}';".format(Reading, param))
+        return {'status': 'success'}
+
+
 api.add_resource(Alerts, '/alerts')
 api.add_resource(User_Alerts, '/alerts/<username>')
+api.add_resource(Update_Alerts, '/update/<param>')
 
 if __name__ == '__main__':
     app.run(port=5000)
