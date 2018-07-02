@@ -8,7 +8,7 @@ app = Flask(__name__)
 api = Api(app)
 
 
-class Rules(Resource):
+class Alerts(Resource):
     def get(self):
         conn = db_connect.connect()
         query = conn.execute("select * from alerts")
@@ -17,11 +17,23 @@ class Rules(Resource):
     def post(self):
         conn = db_connect.connect()
         print(request.json)
-        User = request.json['User']
-        EnvParam = request.json['EnvParam']
-        Threshold = request.json['Threshold']
-        query = conn.execute("insert into alerts values(null,'{0}','{1}','{2}')"
-                             .format(User, EnvParam, Threshold))
+        Users = request.json['User']
+        for user in Users:
+            EnvParam = request.json['EnvParam']
+            Threshold = request.json['Threshold']
+            query = conn.execute("insert into alerts values('{0}','{1}','{2}', null, null)"
+                                 .format(user, EnvParam, Threshold))
+        return {'status': 'success'}
+
+    def delete(self):
+        conn = db_connect.connect()
+        print(request.json)
+        Users = request.json['User']
+        for user in Users:
+            EnvParam = request.json['EnvParam']
+            Threshold = request.json['Threshold']
+            query = conn.execute("delete from alerts where User='{0}' and EnvParam='{1}' and Threshold='{2}'"
+                                 .format(user, EnvParam, Threshold))
         return {'status': 'success'}
 
 
@@ -33,8 +45,8 @@ class User_Alerts(Resource):
         return jsonify(result)
 
 
-api.add_resource(Rules, '/rules')
-api.add_resource(User_Alerts, '/rules/<username>')
+api.add_resource(Alerts, '/alerts')
+api.add_resource(User_Alerts, '/alerts/<username>')
 
 if __name__ == '__main__':
-    app.run(port=5002)
+    app.run(port=5000)
